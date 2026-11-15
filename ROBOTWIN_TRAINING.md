@@ -93,6 +93,7 @@ python "$RTC_DIR/scripts/configure_robotwin_deploy.py" \
 终端 A，在 OpenPI 策略环境启动模型服务：
 
 ```bash
+export OPENPI_DATA_REPO_ID="$REPO_ID"
 cd "$ROBOTWIN_ROOT/XPolicyLab/policy/Pi_0"
 bash setup_eval_policy_server.sh RoboTwin place_a2b_left \
   "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost
