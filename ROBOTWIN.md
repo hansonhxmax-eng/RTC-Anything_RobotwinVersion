@@ -1,5 +1,9 @@
 # RTC Anything on RoboTwin with π0
 
+For a **new π0 training run**, including dataset conversion, LoRA setup,
+checkpoint selection, evaluation videos, and curves, start with
+[ROBOTWIN_TRAINING.md](ROBOTWIN_TRAINING.md).
+
 This fork runs RoboTwin's official XPolicyLab evaluator with RTC Anything's
 asynchronous action chunking. The policy server uses XPolicyLab's `Pi_0`
 adapter. The simulator and policy server are separate processes. The simulator
