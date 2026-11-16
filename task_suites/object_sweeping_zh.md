@@ -25,13 +25,7 @@
 
 ## 📺 效果演示
 
-<table align="center">
-  <tr>
-    <td align="center" width="360">
-      <video src="https://github.com/user-attachments/assets/487fa8d3-b1be-49d2-a21f-13e45b4bb97b" controls width="360"></video>
-    </td>
-  </tr>
-</table>
+此分支已移除原真机录像；新的仿真测评视频完成后再添加。
 
 ---
 

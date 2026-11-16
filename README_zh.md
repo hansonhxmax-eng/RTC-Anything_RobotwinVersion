@@ -31,45 +31,7 @@ RTC Anything 为 Agilex 机器人平台上的具身策略部署提供了一套�
 | 物体清扫 | 工具辅助物体操作 | [打开指南](task_suites/object_sweeping_zh.md) |
 | 桌面清洁 | 桌面清洁 | [打开指南](task_suites/table_cleaning_zh.md) |
 
-任务套件演示：
-
-<div align="center">
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">衣物折叠 · 侧视视角</th>
-      <th align="center">衣物折叠 · 俯视视角</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/aea1e78f-62c1-42c2-9d6d-790a1e174937" controls width="360"></video>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/3c50bf0b-924a-461e-b238-f3c518ba31bd" controls width="360"></video>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" align="center">
-        <p><strong>衣物折叠</strong><br><a href="task_suites/clothes_folding_zh.md">打开指南</a></p>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/487fa8d3-b1be-49d2-a21f-13e45b4bb97b" controls width="360"></video>
-        <p align="center"><strong>物体清扫</strong><br><a href="task_suites/object_sweeping_zh.md">打开指南</a></p>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/c1d8110b-0007-48ab-bb69-4d1f369f2683" controls width="360"></video>
-        <p align="center"><strong>桌面清洁</strong><br><a href="task_suites/table_cleaning_zh.md">打开指南</a></p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-</div>
+此分支已移除 RTC-Anything 真机录像。RoboTwin 仿真测评完成后会补充新视频。
 
 ## 特性
 

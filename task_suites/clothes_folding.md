@@ -25,24 +25,7 @@
 
 ## 📺 Demonstration
 
-<table align="center">
-  <thead>
-    <tr>
-      <th align="center">Side View</th>
-      <th align="center">Top View</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/aea1e78f-62c1-42c2-9d6d-790a1e174937" controls width="360"></video>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/3c50bf0b-924a-461e-b238-f3c518ba31bd" controls width="360"></video>
-      </td>
-    </tr>
-  </tbody>
-</table>
+Original real-robot recordings have been removed from this fork. New simulation evaluation videos will be added after they are recorded.
 
 
 ## 🤖 Training Setup
