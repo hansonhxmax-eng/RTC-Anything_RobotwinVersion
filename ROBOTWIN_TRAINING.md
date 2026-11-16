@@ -55,7 +55,7 @@ uv run scripts/compute_norm_stats.py rtc_robotwin_pi0_lora
 test -f "assets/rtc_robotwin_pi0_lora/$REPO_ID/norm_stats.json"
 ```
 
-双张 24GB 时改为 `--fsdp-devices 2`，训练命令同时改为 `--gpus 0,1`。`batch-size` 必须能被 `fsdp-devices` 整除。第一次正式训练前可以把 `--steps` 暂设成 20 做冒烟测试，**另用一个 `--run-name`**；正式训练再把它改回 30000，重新运行准备脚本和归一化统计（同一数据集统计可以沿用）。更改配置时不要让训练进程运行。
+双张 24GB 时改为 `--fsdp-devices 2`，训练命令同时改为 `--gpus 0,1`。`batch-size` 必须能被 `fsdp-devices` 整除。这次单张 48GB 直接使用 `batch_size=32` 启动正式训练；启动前核对新数据集、归一化统计和 checkpoint 路径，不另跑 20 步批量测试。更改配置时不要让训练进程运行。
 
 ## 4. 新训练、查看进度、断点续训
 
@@ -133,7 +133,7 @@ python scripts/plot_robotwin_metrics.py \
 | --- | --- | --- |
 | 训练任务 | 数据下载任务、转换模式、`REPO_ID`、`RUN_NAME`、评测 `--task-name` | 数据、checkpoint 和场景必须一致 |
 | 训练步数 | `prepare_robotwin_pi0.py --steps` | 决定目标步数；续训前增大该数，再传 `--resume` |
-| 批量 | `--batch-size` | 大批量占更多显存；先从 32 试跑，OOM 再降为 16 或 8 |
+| 批量 | `--batch-size` | 本次设为 32；只有实际训练遇到显存不足才考虑下调 |
 | GPU 数 | `--fsdp-devices` 与训练 `--gpus` | 单 48GB 用 `1`/`0`；双 24GB 用 `2`/`0,1` |
 | 保存间隔 | `--save-interval` | 越小可恢复得越细，但 checkpoint 占用更多磁盘 |
 | 异步请求间隔 | `eval_robotwin_rtc.py --request-interval` | 越小预测越频繁，负载更高；先用 8 |
