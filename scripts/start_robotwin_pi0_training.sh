@@ -79,7 +79,7 @@ if [[ -f "$norm_stats" ]]; then
   echo "Using existing stats: $norm_stats"
 else
   cd "$OPENPI_ROOT"
-  .venv/bin/python scripts/compute_norm_stats.py "$CONFIG_NAME"
+  .venv/bin/python scripts/compute_norm_stats.py --config-name "$CONFIG_NAME"
 fi
 test -s "$norm_stats"
 echo "Normalization stats: $norm_stats"
