@@ -65,23 +65,35 @@ for path, replacements in patches.items():
 PY
 
 echo '[5/6] Downloading RoboTwin simulation assets and resolving paths'
-cd "$ROBOTWIN_ROOT/assets"
-python _download.py
-for name in background_texture embodiments objects; do
-  if [[ -f "$name.zip" ]]; then
-    unzip -oq "$name.zip"
-    rm -f "$name.zip"
-  elif [[ ! -d "$name" ]]; then
-    echo "Missing assets/$name and assets/$name.zip" >&2
-    exit 1
-  fi
-done
+if [[ -d "$ROBOTWIN_ROOT/assets/background_texture" \
+   && -d "$ROBOTWIN_ROOT/assets/embodiments" \
+   && -d "$ROBOTWIN_ROOT/assets/objects" ]]; then
+  echo 'Assets already extracted; skipping archive download'
+else
+  cd "$ROBOTWIN_ROOT/assets"
+  python _download.py
+  for name in background_texture embodiments objects; do
+    if [[ -f "$name.zip" ]]; then
+      unzip -oq "$name.zip"
+      rm -f "$name.zip"
+    elif [[ ! -d "$name" ]]; then
+      echo "Missing assets/$name and assets/$name.zip" >&2
+      exit 1
+    fi
+  done
+fi
 cd "$ROBOTWIN_ROOT"
 python scripts/update_embodiment_config_path.py
 
 echo '[6/6] Installing OpenPI in its independent Python 3.11 JAX environment'
 python -m pip install uv
-bash "$ROBOTWIN_ROOT/XPolicyLab/policy/Pi_0/install.sh"
+cd "$OPENPI_ROOT"
+UV_LINK_MODE=copy GIT_LFS_SKIP_SMUDGE=1 uv sync --group lerobot --python 3.11
+# --python is necessary: the active RoboTwin Conda environment is Python 3.10.
+UV_LINK_MODE=copy GIT_LFS_SKIP_SMUDGE=1 uv pip install \
+  --python "$OPENPI_ROOT/.venv/bin/python" -e "$OPENPI_ROOT"
+UV_LINK_MODE=copy GIT_LFS_SKIP_SMUDGE=1 uv pip install \
+  --python "$OPENPI_ROOT/.venv/bin/python" -e "$ROBOTWIN_ROOT/XPolicyLab"
 
 echo '[verify] cuRobo, simulator GPU and JAX GPU'
 python - <<'PY'
