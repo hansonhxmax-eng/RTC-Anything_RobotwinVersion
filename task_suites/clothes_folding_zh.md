@@ -25,24 +25,7 @@
 
 ## 📺 效果演示
 
-<table align="center">
-  <thead>
-    <tr>
-      <th align="center">侧视视角</th>
-      <th align="center">俯视视角</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/aea1e78f-62c1-42c2-9d6d-790a1e174937" controls width="360"></video>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/3c50bf0b-924a-461e-b238-f3c518ba31bd" controls width="360"></video>
-      </td>
-    </tr>
-  </tbody>
-</table>
+此分支已移除原真机录像；新的仿真测评视频完成后再添加。
 
 
 ## 🤖 训练配置

@@ -35,45 +35,7 @@ The **training dataset** used for embodied policy learning in these setups is pu
 | Object sweeping | Tool-mediated manipulation | [Open guide](task_suites/object_sweeping.md) |
 | Table cleaning | Table cleaning | [Open guide](task_suites/table_cleaning.md) |
 
-Task suite demos:
-
-<div align="center">
-
-<table>
-  <thead>
-    <tr>
-      <th align="center">Clothes folding · Side view</th>
-      <th align="center">Clothes folding · Top view</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/aea1e78f-62c1-42c2-9d6d-790a1e174937" controls width="360"></video>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/3c50bf0b-924a-461e-b238-f3c518ba31bd" controls width="360"></video>
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2" align="center">
-        <p><strong>Clothes folding</strong><br><a href="task_suites/clothes_folding.md">Guide</a></p>
-      </td>
-    </tr>
-    <tr>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/487fa8d3-b1be-49d2-a21f-13e45b4bb97b" controls width="360"></video>
-        <p align="center"><strong>Object sweeping</strong><br><a href="task_suites/object_sweeping.md">Guide</a></p>
-      </td>
-      <td align="center" width="360">
-        <video src="https://github.com/user-attachments/assets/c1d8110b-0007-48ab-bb69-4d1f369f2683" controls width="360"></video>
-        <p align="center"><strong>Table cleaning</strong><br><a href="task_suites/table_cleaning.md">Guide</a></p>
-      </td>
-    </tr>
-  </tbody>
-</table>
-
-</div>
+RTC-Anything real-robot recordings were removed from this fork. RoboTwin simulation videos will be added after evaluation.
 
 ## Features
 
