@@ -15,6 +15,7 @@ import re
 
 LOSS = re.compile(r"Step\s+(\d+):[^\n]*?\bloss=([0-9.eE+-]+)")
 SUCCESS = re.compile(r"Success rate:\s*(\d+)\s*/\s*(\d+)\s*=>\s*([0-9.]+)%")
+ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 
 
 def parse_training(text: str) -> list[tuple[int, float]]:
@@ -23,7 +24,8 @@ def parse_training(text: str) -> list[tuple[int, float]]:
 
 
 def parse_evaluation(text: str) -> list[tuple[int, int, float]]:
-    return [(int(total), int(wins), float(rate)) for wins, total, rate in SUCCESS.findall(text)]
+    plain_text = ANSI_ESCAPE.sub("", text)
+    return [(int(total), int(wins), float(rate)) for wins, total, rate in SUCCESS.findall(plain_text)]
 
 
 def main() -> None:
