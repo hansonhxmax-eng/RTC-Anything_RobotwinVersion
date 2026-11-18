@@ -12,6 +12,20 @@ RUN="$BASE/$(date -u +%Y%m%dT%H%M%SZ)-$$"
 mkdir -p "$RUN"
 ln -sfn "$RUN" "$BASE/latest"
 
+if ! nvidia-smi -L > "$RUN/gpu_preflight.log" 2>&1; then
+    echo 'NVIDIA GPU unavailable; no task probe started' >> "$RUN/gpu_preflight.log"
+    exit 70
+fi
+if ! VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json \
+    vulkaninfo --summary > "$RUN/vulkan_preflight.log" 2>&1; then
+    echo 'NVIDIA Vulkan unavailable; no task probe started' >> "$RUN/vulkan_preflight.log"
+    exit 71
+fi
+if ! grep -q 'deviceName.*NVIDIA' "$RUN/vulkan_preflight.log"; then
+    echo 'Vulkan did not select NVIDIA; no task probe started' >> "$RUN/vulkan_preflight.log"
+    exit 71
+fi
+
 cd "$ROOT"
 for task in rtc_object_sweeping rtc_clothes_folding; do
     test -s "envs/$task.py"
