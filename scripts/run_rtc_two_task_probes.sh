@@ -8,6 +8,9 @@ ROOT=/workspace/RoboTwin
 mkdir -p "$BASE"
 exec 9>"$BASE/lock"
 flock -n 9 || { echo 'Probes already running' >&2; exit 75; }
+RUN="$BASE/$(date -u +%Y%m%dT%H%M%SZ)-$$"
+mkdir -p "$RUN"
+ln -sfn "$RUN" "$BASE/latest"
 
 cd "$ROOT"
 for task in rtc_object_sweeping rtc_clothes_folding; do
@@ -19,12 +22,12 @@ done
 
 # The existing table-cleaning probe may still be running on this GPU.
 while pgrep -af '^/opt/conda/envs/RoboTwin/bin/python -u /workspace/RTC-Anything_RobotwinVersion/scripts/diagnose_table_cleaning.py' >/dev/null; do
-    echo "Waiting for table probe: $(date -u +%FT%TZ)" >> "$BASE/wait.log"
+    echo "Waiting for table probe: $(date -u +%FT%TZ)" >> "$RUN/wait.log"
     sleep 15
 done
 
 for task in rtc_object_sweeping rtc_clothes_folding; do
-    log="$BASE/$task.log"
+    log="$RUN/$task.log"
     printf 'Started: %s\n' "$(date -u +%FT%TZ)" > "$log"
     set +e
     PYTHONUNBUFFERED=1 timeout --signal=TERM --kill-after=30s 1200 \
@@ -33,6 +36,6 @@ for task in rtc_object_sweeping rtc_clothes_folding; do
         --task-name "$task" --seed 0 >> "$log" 2>&1
     result=$?
     set -e
-    printf '%s\n' "$result" > "$BASE/$task.exit"
+    printf '%s\n' "$result" > "$RUN/$task.exit"
     printf 'Finished: %s; exit=%s\n' "$(date -u +%FT%TZ)" "$result" >> "$log"
 done
