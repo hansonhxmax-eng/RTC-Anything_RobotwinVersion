@@ -53,7 +53,10 @@ class rtc_object_sweeping(Base_Task):
             brush_z = float(self.brush.get_pose().p[2])
             self.move(self.move_by_displacement(arm, z=0.76 - brush_z))
             # The object must be moved by contact with the held brush.
-            self.move(self.move_by_displacement(arm, y=0.31))
+            # Short contact motions help localize a planning failure and
+            # avoid asking the arm to traverse the entire zone at once.
+            for _ in range(3):
+                self.move(self.move_by_displacement(arm, y=0.105))
             self.move(self.move_by_displacement(arm, z=0.10))
 
         self.move(self.open_gripper(arm))
