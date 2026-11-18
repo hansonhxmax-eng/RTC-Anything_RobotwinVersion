@@ -18,6 +18,14 @@
 
 另有 1 次异步冒烟测评（0/1）和 10 次同步诊断测评（4/10）；这些不计入上表的正式 100 次测评。
 
+## 曲线
+
+![30,000 步训练 loss](../assets/robotwin/place_a2b_left_train_loss.png)
+
+![100 次异步评测累计成功率](../assets/robotwin/place_a2b_left_eval_success.png)
+
+训练 loss 反映对演示数据的拟合。累计成功率是到第 n 个 episode 为止的成功数除以 n；前期幅度大，终点 35/100 = 35.0%，并不是随着训练步数下降的验证 loss。
+
 ## 代表性仿真录像
 
 - [RTC 异步成功 episode 51](../assets/robotwin/place_a2b_left_rtc_success_episode51.mp4)：来自正式 100 次异步测评，12.6 秒；初始 A 在左，机械臂将 A 放到 B 左侧。成功判定对应本次评测的环境标志，视频展示所选片段，不表示衣物折叠、清扫或清洁任务完成。
@@ -31,4 +39,4 @@
 - 图和数据：`/workspace/rtc_place_a2b_left_lora_seed0_metrics/` 下的 `train_loss.png`、`train_loss.csv`、`eval_success.png`、`eval_success.csv`、`summary.json`。
 - 异步评测结果及 MP4：`/workspace/RoboTwin/eval_result/place_a2b_left/Pi_0/demo_clean/rtc_place_a2b_left_lora_seed0/` 的时间戳子目录。
 
-`train_loss.png` 仅表示**训练集 loss**；`eval_success.png` 是仿真 episode 的累计成功率。尚未生成独立验证集的 loss 曲线。完整录像、曲线 PNG/CSV、日志和大体积 checkpoint 尚未上传到 GitHub，销毁租用实例前应下载或另行备份。
+`train_loss.png` 仅表示**训练集 loss**；`eval_success.png` 是仿真 episode 的累计成功率。尚未生成独立验证集的 loss 曲线。两张曲线的 PNG 和一段成功录像已上传；完整录像、曲线 CSV、日志和大体积 checkpoint 尚未上传到 GitHub，销毁租用实例前应下载或另行备份。
