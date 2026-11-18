@@ -26,6 +26,27 @@ if ! VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json \
 fi
 
 cd "$ROOT"
+
+# RoboTwin's instruction generator requires one template JSON per task. These
+# three proxy tasks are new to this fork, so install their prompt templates
+# before collection. Existing user-edited templates are preserved.
+mkdir -p "$ROOT/description/task_instruction"
+if [[ ! -f "$ROOT/description/task_instruction/rtc_table_cleaning.json" ]]; then
+  cat > "$ROOT/description/task_instruction/rtc_table_cleaning.json" <<'JSON'
+{"full_description":"collect three blocks and wipe six marked table patches with a rigid towel proxy","schema":"{A} are the blocks; {B} is the rigid towel proxy","preference":"Describe collecting the blocks and wiping the table patches.","seen":["Collect {A}, then wipe the marked table patches using {B}.","Move {A} to the collection area and clean the patches with {B}.","Use {B} to wipe all marked patches after collecting {A}.","Clear {A} and wipe the table with {B}."],"unseen":["Gather {A} and wipe each marked patch using {B}.","Put away {A}, then clean the marked areas with {B}."]}
+JSON
+fi
+if [[ ! -f "$ROOT/description/task_instruction/rtc_object_sweeping.json" ]]; then
+  cat > "$ROOT/description/task_instruction/rtc_object_sweeping.json" <<'JSON'
+{"full_description":"sweep five rigid blocks into the marked collection zone with a brush proxy","schema":"{A} are the blocks; {B} is the brush proxy","preference":"Describe sweeping all blocks into the marked zone.","seen":["Sweep {A} into the marked collection zone using {B}.","Use {B} to push all five blocks into the collection area.","Gather {A} in the green marked zone with {B}.","Sweep the blocks into the target area with {B}."],"unseen":["Push each block into the collection zone using {B}.","Use {B} to sweep {A} together inside the marked area."]}
+JSON
+fi
+if [[ ! -f "$ROOT/description/task_instruction/rtc_clothes_folding.json" ]]; then
+  cat > "$ROOT/description/task_instruction/rtc_clothes_folding.json" <<'JSON'
+{"full_description":"fold one rigid padded panel onto another as a clothes-folding proxy","schema":"{A} is the rigid garment panel; {B} is the base panel","preference":"Describe folding the movable panel onto the base panel.","seen":["Fold {A} onto {B}.","Place {A} on top of {B} to fold the garment.","Use the right arm to fold {A} onto {B}.","Fold the movable panel over the base panel."],"unseen":["Lay {A} over {B} to complete the fold.","Stack the two garment panels by folding {A} onto {B}."]}
+JSON
+fi
+
 for task in "${TASKS[@]}"; do
   log="$RUN/$task.log"
   data="$ROOT/data/demo_clean/$task/aloha_agilex/data"
