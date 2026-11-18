@@ -33,6 +33,15 @@ def main():
     def run_one(task, args):
         args["need_plan"] = True
         count = 0
+
+        def report_scene():
+            for index, (obj, _) in enumerate(task.items):
+                print(f"[ITEM {index}] xyz={obj.get_pose().p.tolist()}", flush=True)
+            print(f"[TOWEL] xyz={task.towel.get_pose().p.tolist()}", flush=True)
+            print(f"[MILK] clean={[spot['clean'] for spot in task.milk]}", flush=True)
+            print(f"[LEFT EE] pose={task.robot.get_left_ee_pose()}", flush=True)
+            print(f"[RIGHT EE] pose={task.robot.get_right_ee_pose()}", flush=True)
+
         try:
             task.setup_demo(now_ep_num=0, seed=opts.seed, **args)
             original_move = task.move
@@ -54,14 +63,12 @@ def main():
             task.move = tracked_move
             task.play_once()
             print(f"[FINAL] plan_success={task.plan_success}", flush=True)
-            for index, (obj, _) in enumerate(task.items):
-                print(f"[ITEM {index}] xyz={obj.get_pose().p.tolist()}", flush=True)
-            print(f"[TOWEL] xyz={task.towel.get_pose().p.tolist()}", flush=True)
-            print(f"[MILK] clean={[spot['clean'] for spot in task.milk]}", flush=True)
+            report_scene()
             print(f"[FINAL] check_success={task.check_success()}", flush=True)
             print(f"[FINAL] planned_joints_legal={task.planned_joints_legal()}", flush=True)
         except StageFailure as exc:
             print(f"[DIAGNOSIS] {exc}", flush=True)
+            report_scene()
         finally:
             if hasattr(task, "scene"):
                 task.close_env()
