@@ -17,7 +17,16 @@ RUN="$BASE/$(date -u +%Y%m%dT%H%M%SZ)-$$"
 mkdir -p "$RUN"
 ln -sfn "$RUN" "$BASE/latest"
 exec > >(tee -a "$RUN/pipeline.log") 2>&1
-trap 'echo "$?" > "$RUN/exit"' EXIT
+server_pid=
+finish() {
+  result=$?
+  if [[ -n "$server_pid" ]] && kill -0 "$server_pid" 2>/dev/null; then
+    kill "$server_pid" 2>/dev/null || true
+    wait "$server_pid" 2>/dev/null || true
+  fi
+  echo "$result" > "$RUN/exit"
+}
+trap finish EXIT
 
 COLLECTION=/workspace/rtc_three_suite_collection/latest
 echo "Waiting for data collection: $COLLECTION"
@@ -58,4 +67,56 @@ cd "$RTC"
   --run-name "$RUN_NAME" --gpus 0 --seed 0 \
   2>&1 | tee "$RUN/train.log"
 
-echo 'Dataset conversion, normalization, and 30k-step π0 training completed.'
+checkpoint_dir="$POLICY/checkpoints/$RUN_NAME"
+checkpoint_step=$(find "$checkpoint_dir" -mindepth 1 -maxdepth 1 -type d \
+  -printf '%f\n' | awk '/^[0-9]+$/ {print}' | sort -n | tail -n 1)
+if [[ -z "$checkpoint_step" ]]; then
+  echo "No numeric checkpoint found in $checkpoint_dir"
+  exit 1
+fi
+
+"$PY" "$RTC/scripts/configure_robotwin_deploy.py" \
+  --robotwin-root "$ROOT" --run-name "$RUN_NAME" \
+  --repo-id "$REPO_ID" --checkpoint-step "$checkpoint_step"
+
+server_log="$RUN/policy_server.log"
+cd "$POLICY"
+nohup bash setup_eval_policy_server.sh \
+  RoboTwin rtc_table_cleaning "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost \
+  > "$server_log" 2>&1 < /dev/null &
+server_pid=$!
+echo "Policy server PID=$server_pid; checkpoint=$checkpoint_step"
+
+server_ready=false
+for _ in $(seq 1 600); do
+  if ! kill -0 "$server_pid" 2>/dev/null; then
+    cat "$server_log"
+    echo 'Policy server exited before opening port 6000'
+    exit 1
+  fi
+  if (echo > /dev/tcp/127.0.0.1/6000) >/dev/null 2>&1; then
+    server_ready=true
+    break
+  fi
+  sleep 2
+done
+if [[ "$server_ready" != true ]]; then
+  cat "$server_log"
+  echo 'Policy server did not become ready within 20 minutes'
+  exit 1
+fi
+
+for task in rtc_table_cleaning rtc_object_sweeping rtc_clothes_folding; do
+  eval_log="$RUN/${task}_eval100.log"
+  echo "Starting async evaluation: $task (100 episodes)"
+  timeout --signal=TERM --kill-after=60s 12h \
+    "$PY" "$RTC/scripts/eval_robotwin_rtc.py" \
+    --robotwin-root "$ROOT" --task-name "$task" --ckpt-setting "$RUN_NAME" \
+    --port 6000 --test-num 100 --request-interval 8 \
+    > "$eval_log" 2>&1
+  "$PY" "$RTC/scripts/plot_robotwin_metrics.py" \
+    --train-log "$RUN/train.log" --eval-log "$eval_log" \
+    --output-dir "$RUN/metrics/$task"
+done
+
+echo 'Collection, conversion, normalization, 30k-step training, three async evaluations, and plots completed.'
