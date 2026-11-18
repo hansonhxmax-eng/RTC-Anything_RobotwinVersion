@@ -22,10 +22,9 @@ def main():
     sys.path[:0] = [str(root), str(root / "scripts")]
     os.chdir(root)
 
-    from test_render import Sapien_TEST
     import collect_data
-
-    Sapien_TEST()
+    # Do not call test_render.Sapien_TEST: it catches rendering exceptions and
+    # exits with code 0, hiding the actual GPU/Vulkan failure from the runner.
     final_result = {"ok": False}
 
     def report(task):
