@@ -26,17 +26,25 @@
 
 训练 loss 反映对演示数据的拟合。累计成功率是到第 n 个 episode 为止的成功数除以 n；前期幅度大，终点 35/100 = 35.0%，并不是随着训练步数下降的验证 loss。
 
-## 代表性仿真录像
+## 精选仿真录像
 
-- [RTC 异步成功 episode 51](../assets/robotwin/place_a2b_left_rtc_success_episode51.mp4)：来自正式 100 次异步测评，12.6 秒；初始 A 在左，机械臂将 A 放到 B 左侧。成功判定对应本次评测的环境标志，视频展示所选片段，不表示衣物折叠、清扫或清洁任务完成。
-- 上传压缩包内另有同步 100 条与异步 100 条视频；本仓库目前只收录这一条代表性片段。成功率仍以原始测评日志与结果文件为准。
+以下四段均来自 **2026-11-18_01-03-18_664879** 批次的 100 次 RTC 异步测评；episode 编号对应原始 MP4。视频由本次仿真实际录制，并非原真机项目素材。
 
-## 结果文件（仍在 GPU 实例上）
+| 测评判定 | Episode | 视频 | 时长 |
+| --- | ---: | --- | ---: |
+| 成功 | 24 | [播放 / 下载](../assets/robotwin/rollouts/rtc_async_100/episode24.mp4) | 13.9 秒 |
+| 成功 | 51 | [播放 / 下载](../assets/robotwin/place_a2b_left_rtc_success_episode51.mp4) | 12.6 秒 |
+| 失败 | 0 | [播放 / 下载](../assets/robotwin/rollouts/rtc_async_100/episode0.mp4) | 40.0 秒 |
+| 失败 | 1 | [播放 / 下载](../assets/robotwin/rollouts/rtc_async_100/episode1.mp4) | 40.0 秒 |
+
+失败片段在 400 动作步上限结束；成功片段在环境报告成功时结束。画面可用于人工检查动作过程，成功率仍以原始测评统计为准。用户提供的 ZIP 中还保存了其余 episode，本仓库按要求只上传精选录像。
+
+## 日志、CSV 和 checkpoint 路径（未上传）
 
 - 异步日志：`/workspace/rtc_place_a2b_left_lora_seed0.eval100.log`。
 - 同步对照日志：`/workspace/rtc_place_a2b_left_lora_seed0.sync100.log`。
 - 训练日志：`/workspace/rtc_place_a2b_left_lora_seed0.setup.log`。
 - 图和数据：`/workspace/rtc_place_a2b_left_lora_seed0_metrics/` 下的 `train_loss.png`、`train_loss.csv`、`eval_success.png`、`eval_success.csv`、`summary.json`。
-- 异步评测结果及 MP4：`/workspace/RoboTwin/eval_result/place_a2b_left/Pi_0/demo_clean/rtc_place_a2b_left_lora_seed0/` 的时间戳子目录。
+- 完整原始 MP4 已由用户以 ZIP 提供；GitHub 收录本页列出的精选录像。GPU 实例上的原目录为 `/workspace/RoboTwin/eval_result/place_a2b_left/Pi_0/demo_clean/rtc_place_a2b_left_lora_seed0/`。
 
-`train_loss.png` 仅表示**训练集 loss**；`eval_success.png` 是仿真 episode 的累计成功率。尚未生成独立验证集的 loss 曲线。两张曲线的 PNG 和一段成功录像已上传；完整录像、曲线 CSV、日志和大体积 checkpoint 尚未上传到 GitHub，销毁租用实例前应下载或另行备份。
+`train_loss.png` 仅表示**训练集 loss**；`eval_success.png` 是仿真 episode 的累计成功率。尚未生成独立验证集的 loss 曲线。两张曲线 PNG 与四段精选录像已上传。完整原始 MP4 已由用户另行提供 ZIP；曲线 CSV、训练与测评日志、大体积 checkpoint 尚未上传到 GitHub，销毁租用实例前应下载或另行备份。

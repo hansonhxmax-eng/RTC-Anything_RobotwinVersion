@@ -2,7 +2,7 @@
 
 ![Title](assets/images/title.png)
 
-For the RoboTwin π0 simulation integration, see [ROBOTWIN.md](ROBOTWIN.md). The [simulation task tracker](ROBOTWIN_TASKS.md) distinguishes the one evaluated task from the three real-robot suites that still require new simulation environments and evaluations.
+RoboTwin π0 simulation: [watch selected success/failure episodes and view curves](results/place_a2b_left_2026-11-18.md); implementation: [ROBOTWIN.md](ROBOTWIN.md). The [simulation task tracker](ROBOTWIN_TASKS.md) distinguishes the one evaluated task from the three real-robot suites that still require new simulation environments and evaluations.
 <div align="center">
 
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-HuggingFace-yellow)](https://huggingface.co/datasets/PEILAB-PhysAI/RTC-Anything)
