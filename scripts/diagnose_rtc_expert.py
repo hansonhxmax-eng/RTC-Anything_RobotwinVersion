@@ -50,10 +50,13 @@ def main():
             def tracked_move(actions, *extras, **kwargs):
                 nonlocal counter
                 counter += 1
-                print(f"[MOVE {counter:02d}] begin", flush=True)
+                arm = actions[0]
+                print(f"[MOVE {counter:02d}] begin arm={arm} "
+                      f"ee={task.get_arm_pose(arm)[:3]} ", flush=True)
                 result = original_move(actions, *extras, **kwargs)
                 print(f"[MOVE {counter:02d}] result={result!r} "
-                      f"plan_success={task.plan_success}", flush=True)
+                      f"plan_success={task.plan_success} "
+                      f"ee={task.get_arm_pose(arm)[:3]}", flush=True)
                 if not task.plan_success:
                     raise StageFailure(f"planning failed at move {counter}")
                 return result
