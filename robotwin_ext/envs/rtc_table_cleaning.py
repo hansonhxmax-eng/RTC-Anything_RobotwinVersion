@@ -35,8 +35,8 @@ class rtc_table_cleaning(Base_Task):
             self.add_prohibit_area(obj, padding=0.05)
 
         self.towel = create_box(
-            self, sapien.Pose([0.24, -0.17, 0.748]),
-            half_size=[0.055, 0.035, 0.008], color=(0.1, 0.45, 0.85),
+            self, sapien.Pose([0.24, -0.17, 0.76]),
+            half_size=[0.025, 0.025, 0.019], color=(0.1, 0.45, 0.85),
             name="rtc_towel_proxy",
         )
         self.add_prohibit_area(self.towel, padding=0.07)
@@ -64,6 +64,12 @@ class rtc_table_cleaning(Base_Task):
 
         arm = ArmTag("right")
         self.move(self.grasp_actor(self.towel, arm_tag=arm, pre_grasp_dis=0.08))
+        self.move(self.move_by_displacement(arm, z=0.10))
+        # Move through free space before lowering to the tabletop; a direct
+        # diagonal motion at table height is blocked by the robot geometry.
+        self.move(self.move_by_displacement(arm, x=-0.12, y=0.11))
+        self.move(self.move_by_displacement(arm, x=-0.12, y=0.10))
+        self.move(self.move_by_displacement(arm, z=-0.10))
         # Each marker must be visited at table height with the towel in hand.
         # Keep the grasp orientation and move the end effector by the measured
         # displacement from towel center to the selected patch.
