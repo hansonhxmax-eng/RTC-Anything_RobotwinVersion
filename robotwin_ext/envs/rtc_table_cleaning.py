@@ -42,8 +42,8 @@ class rtc_table_cleaning(Base_Task):
         self.add_prohibit_area(self.towel, padding=0.07)
         self.milk = []
         for index, (x, y) in enumerate(
-            ( (0.00, 0.04), (0.07, 0.04), (0.14, 0.04),
-              (0.00, 0.11), (0.07, 0.11), (0.14, 0.11) )
+            ( (0.12, -0.06), (0.19, -0.06), (0.26, -0.06),
+              (0.12, 0.01), (0.19, 0.01), (0.26, 0.01) )
         ):
             marker = create_visual_box(
                 self, sapien.Pose([x, y, 0.741]),
@@ -68,7 +68,6 @@ class rtc_table_cleaning(Base_Task):
         # Move through free space before lowering to the tabletop; a direct
         # diagonal motion at table height is blocked by the robot geometry.
         self.move(self.move_by_displacement(arm, x=-0.12, y=0.11))
-        self.move(self.move_by_displacement(arm, x=-0.12, y=0.10))
         self.move(self.move_by_displacement(arm, z=-0.10))
         # Each marker must be visited at table height with the towel in hand.
         # Keep the grasp orientation and move the end effector by the measured
