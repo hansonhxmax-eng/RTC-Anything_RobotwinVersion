@@ -24,7 +24,9 @@ class rtc_clothes_folding(Base_Task):
         )
         self.fold_panel = create_box(
             self, sapien.Pose([0.28, -0.04, 0.76]),
-            half_size=[0.055, 0.06, 0.019], color=(0.25, 0.45, 0.93),
+            # Keep the movable panel narrow enough for the ALOHA gripper.
+            # The wide plate in the first probe remained at its start pose.
+            half_size=[0.025, 0.025, 0.019], color=(0.25, 0.45, 0.93),
             name="rtc_garment_fold_panel",
         )
         self.fold_line = create_visual_box(
