@@ -18,7 +18,9 @@ class rtc_object_sweeping(Base_Task):
 
     def load_actors(self):
         self.dustpan_zone = create_visual_box(
-            self, sapien.Pose([0.22, 0.18, 0.741]),
+            # Keep the target within the right arm's reachable sweep. At
+            # x=0.10 its EE cannot plan past y=0.04 at table height.
+            self, sapien.Pose([0.22, 0.11, 0.741]),
             half_size=[0.175, 0.085, 0.001], color=(0.12, 0.7, 0.28),
             name="rtc_dustpan_zone",
         )
@@ -53,10 +55,9 @@ class rtc_object_sweeping(Base_Task):
             brush_z = float(self.brush.get_pose().p[2])
             self.move(self.move_by_displacement(arm, z=0.76 - brush_z))
             # The object must be moved by contact with the held brush.
-            # The third 10.5 cm segment crossed the right arm's reachable
-            # boundary in the first probe. Two full strokes moved the block
-            # to y=0.079; one short stroke should reach the zone at y=0.095.
-            for distance in (0.105, 0.105, 0.04):
+            # Two contact strokes moved the first object from y=-0.10 to
+            # y=0.079 without exceeding the arm's reach.
+            for distance in (0.105, 0.105):
                 self.move(self.move_by_displacement(arm, y=distance))
             self.move(self.move_by_displacement(arm, z=0.10))
 
@@ -69,7 +70,7 @@ class rtc_object_sweeping(Base_Task):
         return bool(
             all(
                 0.04 < obj.get_pose().p[0] < 0.40
-                and 0.095 < obj.get_pose().p[1] < 0.27
+                and 0.04 < obj.get_pose().p[1] < 0.18
                 and 0.74 < obj.get_pose().p[2] < 0.84
                 for obj in self.objects
             )
