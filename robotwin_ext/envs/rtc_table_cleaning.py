@@ -21,7 +21,7 @@ class rtc_table_cleaning(Base_Task):
             modelname="011_dustbin", is_static=True, convex=True,
         )
         self.items = []
-        for index, (x, y) in enumerate(((-0.25, -0.17), (-0.14, -0.18), (-0.22, 0.14))):
+        for index, (x, y) in enumerate(((-0.25, -0.17), (-0.14, -0.18), (-0.08, -0.04))):
             obj = create_box(
                 self, sapien.Pose([x, y, 0.76]),
                 half_size=[0.019, 0.019, 0.019],
