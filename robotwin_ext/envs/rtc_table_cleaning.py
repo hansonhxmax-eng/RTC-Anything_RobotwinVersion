@@ -6,7 +6,7 @@ This is a simulation proxy, not liquid or fabric physics.
 """
 
 from ._base_task import Base_Task
-from .utils import Action, ArmTag, create_actor, create_box, create_visual_box
+from .utils import Action, ArmTag, create_box, create_visual_box
 import numpy as np
 import sapien
 
@@ -16,9 +16,12 @@ class rtc_table_cleaning(Base_Task):
         super()._init_task_env_(**kwargs)
 
     def load_actors(self):
-        self.bucket = create_actor(
-            self.scene, sapien.Pose([-0.45, 0, 0], [0.5, 0.5, 0.5, 0.5]),
-            modelname="011_dustbin", is_static=True, convex=True,
+        # A painted collection zone is a rigid-simulator proxy for the
+        # physical waste bucket in the original real-robot task.
+        self.tray = create_visual_box(
+            self, sapien.Pose([-0.35, 0, 0.7405]),
+            half_size=[0.12, 0.17, 0.0005],
+            color=(0.12, 0.65, 0.24), name="rtc_collection_zone",
         )
         self.items = []
         for index, (x, y) in enumerate(((-0.25, -0.17), (-0.14, -0.18), (-0.08, -0.04))):
@@ -32,7 +35,7 @@ class rtc_table_cleaning(Base_Task):
             self.add_prohibit_area(obj, padding=0.05)
 
         self.towel = create_box(
-            self, sapien.Pose([0.24, 0.21, 0.748]),
+            self, sapien.Pose([0.24, -0.17, 0.748]),
             half_size=[0.055, 0.035, 0.008], color=(0.1, 0.45, 0.85),
             name="rtc_towel_proxy",
         )
@@ -53,9 +56,7 @@ class rtc_table_cleaning(Base_Task):
         for obj, arm in self.items:
             self.move(self.grasp_actor(obj, arm_tag=arm, pre_grasp_dis=0.08))
             self.move(self.move_by_displacement(arm, z=0.12))
-            # RoboTwin's proven dustbin expert moves the left hand above the
-            # bin and drops the object; a near-bottom place pose is blocked by
-            # the bin rim and cannot be planned.
+            # Drop into the marked collection zone from above.
             self.move((arm, [Action("left", "move", [-0.35, -0.1, 0.93,
                                                    0.65, -0.25, 0.25, 0.65])]))
             self.move(self.open_gripper(arm))
@@ -86,10 +87,10 @@ class rtc_table_cleaning(Base_Task):
             if not spot["clean"] and held and 0.74 <= towel[2] <= 0.80 and np.linalg.norm(towel[:2] - spot["xy"]) < 0.04:
                 spot["clean"] = True
                 spot["entity"].set_pose(sapien.Pose([3, 3, -1]))
-        objects_in_bucket = all(
-            abs(obj.get_pose().p[0] + 0.45) < 0.22
-            and abs(obj.get_pose().p[1]) < 0.325
-            and 0.2 < obj.get_pose().p[2] < 0.73
+        objects_collected = all(
+            abs(obj.get_pose().p[0] + 0.35) < 0.12
+            and abs(obj.get_pose().p[1]) < 0.17
+            and 0.74 < obj.get_pose().p[2] < 0.86
             for obj, _ in self.items
         )
-        return objects_in_bucket and all(spot["clean"] for spot in self.milk)
+        return objects_collected and all(spot["clean"] for spot in self.milk)
