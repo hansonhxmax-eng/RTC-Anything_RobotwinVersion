@@ -82,12 +82,12 @@ find "$ROBOTWIN_ROOT/XPolicyLab/policy/Pi_0/checkpoints/$RUN_NAME" \
 
 ## 5. 用新 checkpoint 开服务，异步测评并录像
 
-训练完成后选数字 checkpoint（例如 30000），更新 `deploy.yml` 的模型配置、归一化资产 ID 和步数；脚本会先检查它们属于同一个新 run：
+训练完成后选数字 checkpoint（这次训练 30,000 步的最终目录是 `29999`），更新 `deploy.yml` 的模型配置、归一化资产 ID 和步数；脚本会先检查它们属于同一个新 run：
 
 ```bash
 python "$RTC_DIR/scripts/configure_robotwin_deploy.py" \
   --robotwin-root "$ROBOTWIN_ROOT" --run-name "$RUN_NAME" \
-  --repo-id "$REPO_ID" --checkpoint-step 30000
+  --repo-id "$REPO_ID" --checkpoint-step 29999
 ```
 
 终端 A，在 OpenPI 策略环境启动模型服务：
@@ -125,7 +125,7 @@ python scripts/plot_robotwin_metrics.py \
   --output-dir "$HOME/${RUN_NAME}_metrics"
 ```
 
-得到 `train_loss.png`、`eval_success.png`、CSV 和 `summary.json`。图表只应在实际训练和测评完成后生成。把代码、配置参数、数据集来源、运行命令、测评设置和结果摘要提交 GitHub；大体积 checkpoint 与视频可以放外部存储并提供链接。成功率若要求与某基准在 ±0.5 个百分点内，100 次独立测评只能以 1 个百分点为单位变化，且抽样波动仍可能远大于 0.5；必须先明确相同任务、评测协议和随机种子，再决定样本量。
+得到 `train_loss.png`、`eval_success.png`、CSV 和 `summary.json`。本次运行结果见 [结果记录](results/place_a2b_left_2026-11-18.md)；最终 checkpoint 为 `29999`，不是 `30000`。图表只应在实际训练和测评完成后生成。把代码、配置参数、数据集来源、运行命令、测评设置和结果摘要提交 GitHub；大体积 checkpoint 与视频可以放外部存储并提供链接。成功率若要求与某基准在 ±0.5 个百分点内，100 次独立测评只能以 1 个百分点为单位变化，且抽样波动仍可能远大于 0.5；必须先明确相同任务、评测协议和随机种子，再决定样本量。
 
 ## 调参速查
 
