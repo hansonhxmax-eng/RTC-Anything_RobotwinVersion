@@ -20,7 +20,7 @@ class rtc_table_cleaning(Base_Task):
         # physical waste bucket in the original real-robot task.
         self.tray = create_visual_box(
             self, sapien.Pose([-0.35, 0, 0.7405]),
-            half_size=[0.12, 0.17, 0.0005],
+            half_size=[0.16, 0.17, 0.0005],
             color=(0.12, 0.65, 0.24), name="rtc_collection_zone",
         )
         self.items = []
@@ -93,7 +93,7 @@ class rtc_table_cleaning(Base_Task):
                 spot["clean"] = True
                 spot["entity"].set_pose(sapien.Pose([3, 3, -1]))
         objects_collected = all(
-            abs(obj.get_pose().p[0] + 0.35) < 0.12
+            abs(obj.get_pose().p[0] + 0.35) < 0.16
             and abs(obj.get_pose().p[1]) < 0.17
             and 0.74 < obj.get_pose().p[2] < 0.86
             for obj, _ in self.items
