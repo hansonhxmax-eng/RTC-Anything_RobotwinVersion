@@ -32,6 +32,8 @@ def main():
     root = args.robotwin_root.resolve()
     if not (root / "scripts/eval_policy_xpolicylab.py").is_file():
         parser.error("--robotwin-root must point to a RoboTwin checkout with XPolicyLab evaluation")
+    # RoboTwin imports load relative asset paths during module import.
+    os.chdir(root)
     sys.path.insert(0, str(root))
     sys.path.insert(0, str(root / "scripts"))
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -50,7 +52,6 @@ def main():
 
     evaluator.build_policy_client = build_rtc_client
     Sapien_TEST()
-    os.chdir(root)
     evaluator.main({
         "task_name": args.task_name,
         "policy_name": args.policy_name,

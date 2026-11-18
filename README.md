@@ -2,7 +2,7 @@
 
 ![Title](assets/images/title.png)
 
-For the RoboTwin π0 simulation integration, see [ROBOTWIN.md](ROBOTWIN.md).
+RoboTwin π0 simulation: [watch selected success/failure episodes and view curves](results/place_a2b_left_2026-11-18.md); implementation: [ROBOTWIN.md](ROBOTWIN.md). The [simulation task tracker](ROBOTWIN_TASKS.md) distinguishes the one evaluated task from the three real-robot suites that still require new simulation environments and evaluations.
 <div align="center">
 
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-HuggingFace-yellow)](https://huggingface.co/datasets/PEILAB-PhysAI/RTC-Anything)
@@ -35,7 +35,7 @@ The **training dataset** used for embodied policy learning in these setups is pu
 | Object sweeping | Tool-mediated manipulation | [Open guide](task_suites/object_sweeping.md) |
 | Table cleaning | Table cleaning | [Open guide](task_suites/table_cleaning.md) |
 
-RTC-Anything real-robot recordings were removed from this fork. RoboTwin simulation videos will be added after evaluation.
+RTC-Anything real-robot recordings were removed from this fork. The current simulation result covers only RoboTwin `place_a2b_left`; simulation recordings and metrics have not yet been uploaded. Clothes folding, object sweeping and table cleaning remain unimplemented in RoboTwin.
 
 ## Features
 

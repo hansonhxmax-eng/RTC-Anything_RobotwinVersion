@@ -1,3 +1,7 @@
+## RoboTwin 仿真结果
+
+[观看精选成功与失败视频、查看训练 loss 和测评成功率曲线](results/place_a2b_left_2026-11-18.md)。当前只完成 `place_a2b_left` 的接入验证；[三个原项目任务的进度](ROBOTWIN_TASKS.md)仍待实现与测评。
+
 ![Title](assets/images/title.png)
 <div align="center">
 
