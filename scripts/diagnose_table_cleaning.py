@@ -54,7 +54,8 @@ def main():
                 print(
                     f"[MOVE {count:02d}] result={result!r} "
                     f"plan_success={task.plan_success} "
-                    f"towel={task.towel.get_pose().p.tolist() if count >= 16 else '-'}",
+                    f"towel={task.towel.get_pose().p.tolist() if count >= 16 else '-'} "
+                    f"clean={[spot['clean'] for spot in task.milk] if count >= 16 else '-'}",
                     flush=True,
                 )
                 if not task.plan_success:
