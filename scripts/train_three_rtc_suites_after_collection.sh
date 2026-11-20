@@ -10,6 +10,8 @@ PY=/opt/conda/envs/RoboTwin/bin/python
 REPO_ID=rtc_three_suites_clean_v1
 RUN_NAME=rtc_three_suites_pi0_30k
 BASE=/workspace/rtc_three_suite_training
+export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+export PYTHONPATH="$ROOT/envs/curobo/curobo/src:${PYTHONPATH:-}"
 mkdir -p "$BASE"
 exec 9>"$BASE/lock"
 flock -n 9 || { echo 'Post-collection training pipeline already running' >&2; exit 75; }
@@ -45,9 +47,15 @@ if (( available_gb < 50 )); then
   exit 72
 fi
 
-"$PY" "$RTC/scripts/prepare_rtc_multitask.py" \
-  --robotwin-root "$ROOT" --repo-id "$REPO_ID" --episodes-per-task 50 \
-  2>&1 | tee "$RUN/convert.log"
+converted_info="/root/.cache/huggingface/lerobot/$REPO_ID/meta/info.json"
+if [[ -f "$converted_info" ]]; then
+  "$PY" -c 'import json,sys; assert json.load(open(sys.argv[1]))["total_episodes"] == 150' "$converted_info"
+  echo "Using existing converted dataset: $converted_info"
+else
+  "$PY" "$RTC/scripts/prepare_rtc_multitask.py" \
+    --robotwin-root "$ROOT" --repo-id "$REPO_ID" --episodes-per-task 50 \
+    2>&1 | tee "$RUN/convert.log"
+fi
 
 "$PY" "$RTC/scripts/prepare_robotwin_pi0.py" \
   --robotwin-root "$ROOT" --batch-size 32 --fsdp-devices 1 \
@@ -57,17 +65,32 @@ fi
 export HF_LEROBOT_HOME=/root/.cache/huggingface/lerobot
 export OPENPI_DATA_REPO_ID="$REPO_ID"
 cd "$OPENPI"
-uv run scripts/compute_norm_stats.py \
-  --config-name rtc_robotwin_pi0_lora 2>&1 | tee "$RUN/norm_stats.log"
-test -f "assets/rtc_robotwin_pi0_lora/$REPO_ID/norm_stats.json"
-
-cd "$RTC"
-"$PY" scripts/train_robotwin_pi0.py \
-  --robotwin-root "$ROOT" --repo-id "$REPO_ID" \
-  --run-name "$RUN_NAME" --gpus 0 --seed 0 \
-  2>&1 | tee "$RUN/train.log"
+norm_stats="assets/rtc_robotwin_pi0_lora/$REPO_ID/norm_stats.json"
+if [[ -f "$norm_stats" ]]; then
+  echo "Using existing normalization: $norm_stats"
+else
+  "$OPENPI/.venv/bin/python" scripts/compute_norm_stats.py \
+    --config-name rtc_robotwin_pi0_lora 2>&1 | tee "$RUN/norm_stats.log"
+fi
+test -f "$norm_stats"
 
 checkpoint_dir="$POLICY/checkpoints/$RUN_NAME"
+checkpoint_step=
+if [[ -d "$checkpoint_dir" ]]; then
+  checkpoint_step=$(find "$checkpoint_dir" -mindepth 1 -maxdepth 1 -type d \
+    -printf '%f\n' | awk '/^[0-9]+$/ {print}' | sort -n | tail -n 1)
+fi
+if [[ -n "$checkpoint_step" && "$checkpoint_step" -ge 29999 ]]; then
+  echo "Using completed checkpoint: $checkpoint_step"
+else
+  resume_arg=()
+  if [[ -n "$checkpoint_step" ]]; then resume_arg=(--resume); fi
+  cd "$RTC"
+  "$PY" scripts/train_robotwin_pi0.py \
+    --robotwin-root "$ROOT" --repo-id "$REPO_ID" \
+    --run-name "$RUN_NAME" --gpus 0 --seed 0 "${resume_arg[@]}" \
+    2>&1 | tee "$RUN/train.log"
+fi
 checkpoint_step=$(find "$checkpoint_dir" -mindepth 1 -maxdepth 1 -type d \
   -printf '%f\n' | awk '/^[0-9]+$/ {print}' | sort -n | tail -n 1)
 if [[ -z "$checkpoint_step" ]]; then
