@@ -4,7 +4,6 @@ import argparse
 from collections import defaultdict
 import json
 from pathlib import Path
-import re
 
 import h5py
 import numpy as np
@@ -45,6 +44,7 @@ def main():
     if not raw_paths:
         parser.error(f"No HDF5 episodes in {args.raw}")
     raw = []
+    prompts = set()
     for path in raw_paths:
         with h5py.File(path, "r") as episode:
             key = "action/right_ee_joint_states"
@@ -54,12 +54,9 @@ def main():
             if values.ndim != 2 or values.shape[1] != 1:
                 raise ValueError(f"{path}: expected an (N, 1) gripper action, got {values.shape}")
             raw.append((path.stem, values[:, 0]))
+            # The converter picks one of these exact instructions for the episode.
+            prompts.update(json.loads(episode["instructions"].asstr()[()]))
     summarize("RAW", raw, args.tail_frames)
-
-    prompts = set()
-    for path in (args.raw.parent / "instruction").glob("episode_*.json"):
-        data = json.loads(path.read_text(encoding="utf-8"))
-        prompts.update(str(prompt).strip().casefold() for prompt in data.get("seen", []))
 
     tasks = pq.read_table(args.lerobot / "meta/tasks.parquet").to_pandas()
     if "task" in tasks.columns:
@@ -68,12 +65,7 @@ def main():
         names = tasks["__index_level_0__"]
     else:
         names = tasks.index
-    sweep_pattern = re.compile(r"\bsweep\w*\b|\b(?:target|collection|marked) (?:area|zone)\b")
-    sweep_ids = {
-        int(idx) for idx, name in zip(tasks["task_index"], names)
-        if str(name).strip().casefold() in prompts
-        or sweep_pattern.search(str(name).casefold())
-    }
+    sweep_ids = {int(idx) for idx, name in zip(tasks["task_index"], names) if name in prompts}
     if not sweep_ids:
         raise ValueError("No sweeping task IDs found in LeRobot metadata")
 
@@ -92,9 +84,19 @@ def main():
         raise ValueError(f"No label rows for sweeping task IDs {sorted(sweep_ids)}")
     converted = [(str(episode), [value for _, value in sorted(rows)])
                  for episode, rows in sorted(frames.items())]
-    summarize("LEROBOT", converted, args.tail_frames)
     if len(raw) != len(converted):
-        raise ValueError("Raw and converted episode counts differ; check task matching")
+        raise ValueError(f"Matched {len(converted)} converted episodes for {len(raw)} raw episodes")
+    summarize("LEROBOT", converted, args.tail_frames)
+
+    unmatched = {name: values for name, values in raw}
+    matched = 0
+    for _, values in converted:
+        for name, expected in tuple(unmatched.items()):
+            if len(values) == len(expected) and np.allclose(values, expected, rtol=0, atol=1e-6):
+                del unmatched[name]
+                matched += 1
+                break
+    print(f"LABEL_COMPARE SUMMARY matching_sequences={matched}/{len(raw)}")
 
 
 if __name__ == "__main__":
