@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -69,29 +70,52 @@ def publish(step):
     curl_auth = f'header = "Authorization: Bearer {token}"\n'
 
     def upload(file, digest):
-        found = existing.get(file.name)
-        if found and found["state"] == "uploaded":
-            if found.get("digest") != f"sha256:{digest}":
-                raise RuntimeError(f"Existing release asset has a different checksum: {file.name}")
-            print(f"Already uploaded: {file.name}", flush=True)
-            return
-        if found:
-            request = Request(f"{API}/releases/assets/{found['id']}", headers=headers, method="DELETE")
-            with urlopen(request, timeout=30):
-                pass
-        print(f"Uploading {file.name} ({file.stat().st_size:,} bytes)", flush=True)
-        result = subprocess.check_output(
-            ["curl", "--config", "-", "--fail", "--silent", "--show-error",
-             "--connect-timeout", "15", "--max-time", "1800",
-             "--header", "Content-Type: application/octet-stream",
-             "--data-binary", f"@{file}", f"{upload_url}?name={quote(file.name)}"],
-            input=curl_auth, text=True,
-        )
-        asset = json.loads(result)
-        if (asset["state"], asset["size"], asset.get("digest")) != (
-            "uploaded", file.stat().st_size, f"sha256:{digest}"
-        ):
-            raise RuntimeError(f"Release asset did not pass verification: {file.name}")
+        expected = ("uploaded", file.stat().st_size, f"sha256:{digest}")
+
+        def verify(asset):
+            if (asset["state"], asset["size"], asset.get("digest")) != expected:
+                raise RuntimeError(f"Release asset did not pass verification: {file.name}")
+
+        for attempt in range(1, 6):
+            if attempt > 1:
+                # A timed-out request may still have saved the file.
+                existing.clear()
+                existing.update({
+                    asset["name"]: asset
+                    for asset in api(release["assets_url"] + "?per_page=100")
+                })
+            found = existing.get(file.name)
+            if found and found["state"] == "uploaded":
+                verify(found)
+                print(f"Already uploaded: {file.name}", flush=True)
+                return
+            if found:
+                request = Request(f"{API}/releases/assets/{found['id']}", headers=headers, method="DELETE")
+                with urlopen(request, timeout=30):
+                    pass
+
+            print(f"Uploading {file.name} ({expected[1]:,} bytes), attempt {attempt}/5", flush=True)
+            result = subprocess.run(
+                ["curl", "--config", "-", "--silent", "--show-error",
+                 "--connect-timeout", "15", "--max-time", "1800",
+                 "--write-out", "\n%{http_code}",
+                 "--header", "Content-Type: application/octet-stream",
+                 "--data-binary", f"@{file}", f"{upload_url}?name={quote(file.name)}"],
+                input=curl_auth, text=True, stdout=subprocess.PIPE, check=False,
+            )
+            body, _, status = result.stdout.rpartition("\n")
+            if result.returncode == 0 and status == "201":
+                verify(json.loads(body))
+                return
+            retryable = result.returncode in {5, 6, 7, 16, 18, 28, 35, 52, 55, 56, 92} or status in {
+                "408", "429", "500", "502", "503", "504"
+            }
+            detail = f"HTTP {status or 'unknown'}, curl {result.returncode}"
+            if not retryable or attempt == 5:
+                raise RuntimeError(f"Upload failed for {file.name}: {detail}")
+            delay = min(5 * 2 ** (attempt - 1), 30)
+            print(f"{detail}; retrying in {delay}s", flush=True)
+            time.sleep(delay)
 
     manifest = []
     with tempfile.TemporaryDirectory(prefix="rtc-checkpoint-", dir="/workspace") as temporary:
