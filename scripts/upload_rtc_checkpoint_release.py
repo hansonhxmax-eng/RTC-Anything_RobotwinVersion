@@ -54,7 +54,7 @@ def publish(step):
     if release is None:
         release = api(f"{API}/releases", "POST", {
             "tag_name": tag,
-            "target_commitish": "26718d3",
+            "target_commitish": "results/rtc-three-suites",
             "name": f"RoboTwin π0 RTC checkpoint {step}",
             "body": (
                 "JAX/OpenPI checkpoint from the three-suite RTC simulation run. "
