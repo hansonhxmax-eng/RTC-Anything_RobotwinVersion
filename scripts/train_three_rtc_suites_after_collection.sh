@@ -43,12 +43,11 @@ fi
 cd "$ROOT"
 available_gb=$(df -BG "$ROOT" | awk 'NR==2 {gsub(/G/, "", $4); print $4}')
 echo "Disk free: ${available_gb}G"
-if (( available_gb < 50 )); then
-  echo 'Less than 50 GB free; stopping before dataset conversion/training.'
+converted_info="/root/.cache/huggingface/lerobot/$REPO_ID/meta/info.json"
+if (( available_gb < 50 )) && [[ ! -f "$converted_info" ]]; then
+  echo 'Less than 50 GB free for dataset conversion.'
   exit 72
 fi
-
-converted_info="/root/.cache/huggingface/lerobot/$REPO_ID/meta/info.json"
 if [[ -f "$converted_info" ]]; then
   "$PY" -c 'import json,sys; assert json.load(open(sys.argv[1]))["total_episodes"] == 150' "$converted_info"
   echo "Using existing converted dataset: $converted_info"
@@ -108,7 +107,9 @@ server_log="$RUN/policy_server.log"
 server_script="$POLICY/.rtc_setup_eval_policy_server.sh"
 sed 's|^YAML_PYTHON=.*|YAML_PYTHON="/opt/conda/envs/RoboTwin/bin/python"|' \
   "$POLICY/setup_eval_policy_server.sh" > "$server_script"
-grep -q '^YAML_PYTHON="/opt/conda/envs/RoboTwin/bin/python"
+grep -q 'YAML_PYTHON="/opt/conda/envs/RoboTwin/bin/python"' "$server_script"
+cd "$POLICY"
+nohup bash "$server_script" \
   RoboTwin rtc_table_cleaning "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost \
   > "$server_log" 2>&1 < /dev/null &
 server_pid=$!
@@ -151,47 +152,6 @@ for task in rtc_table_cleaning rtc_object_sweeping rtc_clothes_folding; do
     > "$eval_log" 2>&1
   "$PY" "$RTC/scripts/plot_robotwin_metrics.py" \
     --train-log "$train_log" --eval-log "$eval_log" \
-    --output-dir "$RUN/metrics/$task"
-done
-
-echo 'Collection, conversion, normalization, 30k-step training, three async evaluations, and plots completed.'
- "$server_script"
-cd "$POLICY"
-nohup bash "$server_script" \
-  RoboTwin rtc_table_cleaning "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost \
-  > "$server_log" 2>&1 < /dev/null &
-server_pid=$!
-echo "Policy server PID=$server_pid; checkpoint=$checkpoint_step"
-
-server_ready=false
-for _ in $(seq 1 600); do
-  if ! kill -0 "$server_pid" 2>/dev/null; then
-    cat "$server_log"
-    echo 'Policy server exited before opening port 6000'
-    exit 1
-  fi
-  if (echo > /dev/tcp/127.0.0.1/6000) >/dev/null 2>&1; then
-    server_ready=true
-    break
-  fi
-  sleep 2
-done
-if [[ "$server_ready" != true ]]; then
-  cat "$server_log"
-  echo 'Policy server did not become ready within 20 minutes'
-  exit 1
-fi
-
-for task in rtc_table_cleaning rtc_object_sweeping rtc_clothes_folding; do
-  eval_log="$RUN/${task}_eval100.log"
-  echo "Starting async evaluation: $task (100 episodes)"
-  timeout --signal=TERM --kill-after=60s 12h \
-    "$PY" "$RTC/scripts/eval_robotwin_rtc.py" \
-    --robotwin-root "$ROOT" --task-name "$task" --ckpt-setting "$RUN_NAME" \
-    --port 6000 --test-num 100 --request-interval 8 \
-    > "$eval_log" 2>&1
-  "$PY" "$RTC/scripts/plot_robotwin_metrics.py" \
-    --train-log "$RUN/train.log" --eval-log "$eval_log" \
     --output-dir "$RUN/metrics/$task"
 done
 
