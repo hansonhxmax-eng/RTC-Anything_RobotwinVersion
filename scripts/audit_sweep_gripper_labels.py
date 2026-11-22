@@ -47,7 +47,13 @@ def main():
     raw = []
     for path in raw_paths:
         with h5py.File(path, "r") as episode:
-            raw.append((path.stem, episode["joint_action/right_gripper"][:].reshape(-1)))
+            key = "action/right_ee_joint_states"
+            if key not in episode:
+                raise ValueError(f"{path}: missing RoboTwin v1.0 action field {key}")
+            values = episode[key][:]
+            if values.ndim != 2 or values.shape[1] != 1:
+                raise ValueError(f"{path}: expected an (N, 1) gripper action, got {values.shape}")
+            raw.append((path.stem, values[:, 0]))
     summarize("RAW", raw, args.tail_frames)
 
     prompts = set()
