@@ -10,6 +10,7 @@ PY=/opt/conda/envs/RoboTwin/bin/python
 REPO_ID=rtc_three_suites_clean_v1
 RUN_NAME=rtc_three_suites_pi0_30k
 BASE=/workspace/rtc_three_suite_training
+export PATH="/opt/conda/bin:${PATH}"
 export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 export PYTHONPATH="$ROOT/envs/curobo/curobo/src:${PYTHONPATH:-}"
 mkdir -p "$BASE"
@@ -103,8 +104,60 @@ fi
   --repo-id "$REPO_ID" --checkpoint-step "$checkpoint_step"
 
 server_log="$RUN/policy_server.log"
+# Keep the submodule launcher unchanged. Its script directory must remain Pi_0.
+server_script="$POLICY/.rtc_setup_eval_policy_server.sh"
+sed 's|^YAML_PYTHON=.*|YAML_PYTHON="/opt/conda/envs/RoboTwin/bin/python"|' \
+  "$POLICY/setup_eval_policy_server.sh" > "$server_script"
+grep -q '^YAML_PYTHON="/opt/conda/envs/RoboTwin/bin/python"
+  RoboTwin rtc_table_cleaning "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost \
+  > "$server_log" 2>&1 < /dev/null &
+server_pid=$!
+echo "Policy server PID=$server_pid; checkpoint=$checkpoint_step"
+
+server_ready=false
+for _ in $(seq 1 600); do
+  if ! kill -0 "$server_pid" 2>/dev/null; then
+    cat "$server_log"
+    echo 'Policy server exited before opening port 6000'
+    exit 1
+  fi
+  if (echo > /dev/tcp/127.0.0.1/6000) >/dev/null 2>&1; then
+    server_ready=true
+    break
+  fi
+  sleep 2
+done
+if [[ "$server_ready" != true ]]; then
+  cat "$server_log"
+  echo 'Policy server did not become ready within 20 minutes'
+  exit 1
+fi
+
+train_log="$RUN/train.log"
+if [[ ! -s "$train_log" ]]; then
+  train_log=$(find "$BASE" -mindepth 2 -maxdepth 2 -type f -name train.log \
+    -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2-)
+  [[ -n "$train_log" && -s "$train_log" ]] || { echo "Training log missing for plots"; exit 1; }
+  echo "Using previous training log: $train_log"
+fi
+
+for task in rtc_table_cleaning rtc_object_sweeping rtc_clothes_folding; do
+  eval_log="$RUN/${task}_eval100.log"
+  echo "Starting async evaluation: $task (100 episodes)"
+  timeout --signal=TERM --kill-after=60s 12h \
+    "$PY" "$RTC/scripts/eval_robotwin_rtc.py" \
+    --robotwin-root "$ROOT" --task-name "$task" --ckpt-setting "$RUN_NAME" \
+    --port 6000 --test-num 100 --request-interval 8 \
+    > "$eval_log" 2>&1
+  "$PY" "$RTC/scripts/plot_robotwin_metrics.py" \
+    --train-log "$train_log" --eval-log "$eval_log" \
+    --output-dir "$RUN/metrics/$task"
+done
+
+echo 'Collection, conversion, normalization, 30k-step training, three async evaluations, and plots completed.'
+ "$server_script"
 cd "$POLICY"
-nohup bash setup_eval_policy_server.sh \
+nohup bash "$server_script" \
   RoboTwin rtc_table_cleaning "$RUN_NAME" arx_x5 joint 0 0 uv 6000 localhost \
   > "$server_log" 2>&1 < /dev/null &
 server_pid=$!
