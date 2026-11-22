@@ -1,0 +1,7 @@
+{
+  "last_training_step_logged": 29900,
+  "episodes": 100,
+  "successes": 100,
+  "success_rate_percent": 100.0,
+  "training_loss_is_validation_loss": false
+}
