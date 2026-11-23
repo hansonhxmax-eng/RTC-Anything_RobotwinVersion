@@ -16,7 +16,8 @@ from prepare_robotwin_pi0 import CONFIG_NAME
 
 
 def training_command(args: argparse.Namespace, checkpoint_dir: Path) -> list[str]:
-    command = ["uv", "run", "scripts/train.py", CONFIG_NAME,
+    command = [str(checkpoint_dir.parent.parent / "openpi" / ".venv" / "bin" / "python"),
+               "scripts/train.py", CONFIG_NAME,
                f"--exp-name={args.run_name}", f"--checkpoint-dir-override={checkpoint_dir}",
                f"--seed={args.seed}"]
     if args.resume:
